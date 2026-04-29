@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Горный Алтай | Путешествие мечты</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1f2c1d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            padding: 24px;
+        }
+
+        /* Контейнер для страниц A4 */
+        .pages-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+
+        /* Стиль каждого листа — строгий формат А4 */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            position: relative;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.4);
+            border-radius: 6px;
+            background-color: #cfc7b2;
+        }
+
+        /* Лист №1 фон */
+        .page-1 {
+            background-image: url('https://avatars.mds.yandex.net/i?id=c43d745f215c5ca86c66724caa0e9f49_l-9716553-images-thumbs&n=13');
+            background-size: cover;
+        }
+
+        /* Лист №2 фон (новая ссылка с картой) */
+        .page-2 {
+            background-image: url('https://1.bp.blogspot.com/-aoPyeOXchOI/YLH_0ylO1kI/AAAAAAAACx4/ItT8qd-0cowNSH17cKyYL7Q7q9ymW6JQQCLcBGAsYHQ/s957/%25D0%25BA%25D0%25B0%25D1%2580%25D1%2582%25D0%25B0.1.png');
+            background-size: cover;
+        }
+
+        /* Скрытая страница */
+        .hidden-page {
+            display: none;
+        }
+
+        /* Контейнер для двухстрочного заголовка */
+        .title-block {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+            z-index: 8;
+        }
+
+        .title-line-first {
+            font-family: 'Algerian', 'Copperplate Gothic', 'Times New Roman', cursive;
+            font-size: 100px;
+            font-weight: bold;
+            color: #FFF2C4;
+            text-shadow: 8px 8px 18px #1f3b2c, 4px 4px 8px #00000099;
+            letter-spacing: 2px;
+            line-height: 1.15;
+            white-space: nowrap;
+        }
+
+        .title-line-second {
+            font-family: 'Algerian', 'Copperplate Gothic', 'Times New Roman', cursive;
+            font-size: 70px;
+            font-weight: bold;
+            color: #FFF2C4;
+            text-shadow: 6px 6px 14px #1f3b2c, 3px 3px 6px #00000099;
+            letter-spacing: 1px;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 220mm) {
+            .title-line-first { font-size: 12vw; white-space: normal; }
+            .title-line-second { font-size: 8vw; white-space: normal; }
+            .title-block { width: 90%; }
+        }
+
+        /* Студийная надпись: 8 см от левого края, 1см от нижнего края, шрифт Times New Roman размер 16 */
+        .studio-signature {
+            position: absolute;
+            left: 8cm;
+            bottom: 1cm;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #FFFBE6;
+            text-shadow: 2px 2px 4px #1f4d2e;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            padding: 4px 14px;
+            border-radius: 30px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            z-index: 15;
+            pointer-events: none;
+        }
+        @media (max-width: 200mm) {
+            .studio-signature {
+                left: 3cm;
+                white-space: normal;
+                text-align: center;
+                width: auto;
+                font-size: 12px;
+            }
+        }
+
+        /* Кнопка Регистрация (левый верх: 15мм) */
+        .reg-btn {
+            position: absolute;
+            left: 15mm;
+            top: 15mm;
+            background: linear-gradient(145deg, #2a6b47, #1c4e33);
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 6px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 4px 0 #0e3a24;
+            transition: 0.08s linear;
+            z-index: 20;
+            min-width: 130px;
+            text-align: center;
+        }
+        .reg-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0e3a24; }
+
+        /* Блок "Войти" — размер 5см х 5см, отступ справа 1.5см, сверху 15мм */
+        .login-block {
+            position: absolute;
+            top: 15mm;
+            right: 1.5cm;
+            width: 5cm;
+            height: 5cm;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 8px 10px;
+            border: 1px solid rgba(255, 215, 130, 0.7);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            z-index: 25;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .login-title {
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+            color: #ffdf8c;
+            margin-bottom: 4px;
+        }
+        .field-group {
+            margin-bottom: 6px;
+        }
+        .field-group label {
+            display: block;
+            font-size: 0.65rem;
+            color: #f7e5c2;
+            margin-bottom: 2px;
+        }
+        .login-block input {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 50px;
+            border: none;
+            background: #fff9ef;
+            font-size: 0.7rem;
+            outline: none;
+        }
+        .login-block input:focus { box-shadow: 0 0 0 2px #ffaa44; }
+        .login-submit {
+            width: 100%;
+            background: #e67e22;
+            border: none;
+            padding: 5px;
+            border-radius: 40px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-top: 6px;
+            transition: 0.1s;
+        }
+        .login-submit:hover { background: #f39c12; }
+        .error-message {
+            font-size: 0.55rem;
+            color: #ffbda1;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* Модальное окно регистрации */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: #fef7e8;
+            width: 340px;
+            padding: 24px 20px 28px;
+            border-radius: 48px 24px 48px 24px;
+            text-align: center;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5);
+            border-left: 5px solid #cc8844;
+            border-bottom: 5px solid #cc8844;
+        }
+        .modal-card h3 {
+            font-family: 'Algerian', cursive;
+            font-size: 26px;
+            color: #2c5a3b;
+            margin-bottom: 16px;
+        }
+        .modal-card input {
+            width: 90%;
+            padding: 10px 14px;
+            margin: 10px 0;
+            border: 1px solid #bd8a48;
+            border-radius: 60px;
+            font-size: 0.9rem;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .modal-buttons button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 44px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .modal-reg { background: #2d6a4f; color: white; }
+        .modal-cancel { background: #a76c3a; color: white; }
+
+        /* Стили карточек (кнопок) второго листа - размер 5см x 6см */
+        .tour-card {
+            position: absolute;
+            width: 5cm;
+            height: 6cm;
+            background-size: cover;
+            background-position: center;
+            border-radius: 28px;
+            border: 3px solid #ffdb8e;
+            box-shadow: 0 14px 24px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        .tour-card:hover {
+            transform: scale(1.02);
+            border-color: #ffbb44;
+            filter: brightness(1.02);
+        }
+        .card-caption {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fcf3cf;
+            text-shadow: 2px 2px 4px #1f2c1b;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            display: inline-block;
+            width: fit-content;
+            margin: 0 auto;
+            padding: 4px 16px;
+            border-radius: 60px;
+            letter-spacing: 1px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .card-wrapper {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .hiking-wrapper { left: 10mm; top: 150mm; }
+        .rafting-wrapper { left: 7.5cm; top: 150mm; }
+        .car-wrapper { left: 14cm; top: 150mm; }
+        .card-wrapper .tour-card {
+            position: relative;
+            left: 0;
+            top: 0;
+        }
+
+        .back-home-btn {
+            position: absolute;
+            bottom: 25mm;
+            left: 20mm;
+            background: #2f2a24cc;
+            backdrop-filter: blur(8px);
+            border: 1px solid #f5cb8b;
+            color: #ffefc0;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.1s;
+            font-size: 0.9rem;
+            z-index: 30;
+        }
+        .back-home-btn:hover { background: #594f41cc; color: white; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .page { box-shadow: none; margin: 0; page-break-after: avoid; }
+            .reg-btn, .login-block, .modal, .back-home-btn, .studio-signature { display: none; }
+        }
+        @media (max-width: 230mm) {
+            .page { transform: scale(0.92); margin: 12px auto; }
+            .hiking-wrapper, .rafting-wrapper, .car-wrapper { transform: scale(0.95); }
+        }
+        .info-hint {
+            position: absolute;
+            bottom: 12px;
+            left: 15mm;
+            background: rgba(0,0,0,0.55);
+            color: #fae67a;
+            font-size: 9px;
+            padding: 3px 10px;
+            border-radius: 28px;
+            z-index: 22;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div class="pages-container">
+    <!-- ЛИСТ №1 -->
+    <div id="page1" class="page page-1">
+        <div class="title-block">
+            <div class="title-line-first">Путешествие</div>
+            <div class="title-line-second">по Горному Алтаю</div>
+        </div>
+
+        <div class="studio-signature">Студия Михайло Кук &amp; К°</div>
+
+        <button id="registrationBtn" class="reg-btn">📝 Регистрация</button>
+
+        <!-- Блок "Войти" размер 5x5 см -->
+        <div class="login-block">
+            <div class="login-title">🔐 Войти</div>
+            <div class="field-group">
+                <label>Логин</label>
+                <input type="text" id="loginField" placeholder="Логин">
+            </div>
+            <div class="field-group">
+                <label>Пароль</label>
+                <input type="password" id="passwordField" placeholder="Пароль">
+            </div>
+            <button id="doLoginBtn" class="login-submit">Войти</button>
+            <div id="loginError" class="error-message"></div>
+        </div>
+        <div class="info-hint">🔑 тест: altai / altai2025</div>
+    </div>
+
+    <!-- ЛИСТ №2 -->
+    <div id="page2" class="page page-2 hidden-page">
+        <div class="card-wrapper hiking-wrapper">
+            <div id="hikingBtn" class="tour-card" style="background-image: url('https://png.pngtree.com/background/20230614/original/pngtree-man-walking-up-a-mountain-with-a-backpack-picture-image_3481455.jpg'); background-size: cover;"></div>
+            <div class="card-caption">🥾 Под рюкзаком</div>
+        </div>
+        <div class="card-wrapper rafting-wrapper">
+            <div id="raftingBtn" class="tour-card" style="background-image: url('https://altaiactive.ru/wp-content/uploads/2023/03/splav-po-katuni.jpg'); background-size: cover;"></div>
+            <div class="card-caption">🌊 По воде</div>
+        </div>
+        <div class="card-wrapper car-wrapper">
+            <div id="carBtn" class="tour-card" style="background-image: url('https://i.ytimg.com/vi/a07zUa8MpDM/maxresdefault.jpg'); background-size: cover;"></div>
+            <div class="card-caption">🚗 На машине</div>
+        </div>
+        <button id="backToFirstPage" class="back-home-btn">◀ Назад</button>
+    </div>
+</div>
+
+<!-- Модальное окно регистрации -->
+<div id="regModal" class="modal">
+    <div class="modal-card">
+        <h3>🏔 РЕГИСТРАЦИЯ</h3>
+        <input type="text" id="regLoginInput" placeholder="Придумайте логин">
+        <input type="password" id="regPasswordInput" placeholder="Придумайте пароль">
+        <div id="modalMsg" style="font-size:12px; margin-top:6px; color:#9b4b1a;"></div>
+        <div class="modal-buttons">
+            <button id="confirmRegBtn" class="modal-reg">Зарегистрироваться</button>
+            <button id="cancelRegBtn" class="modal-cancel">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== ЗАПОМИНАНИЕ ЛОГИНА И ПАРОЛЯ (localStorage) ==========
+    const SAVED_LOGIN_KEY = 'savedAltaiLogin';
+    const SAVED_PASS_KEY = 'savedAltaiPass';
+
+    function saveCredentials(login, password) {
+        if (login && password) {
+            localStorage.setItem(SAVED_LOGIN_KEY, login);
+            localStorage.setItem(SAVED_PASS_KEY, password);
+        } else {
+            localStorage.removeItem(SAVED_LOGIN_KEY);
+            localStorage.removeItem(SAVED_PASS_KEY);
+        }
+    }
+
+    function loadSavedCredentials() {
+        const savedLogin = localStorage.getItem(SAVED_LOGIN_KEY);
+        const savedPass = localStorage.getItem(SAVED_PASS_KEY);
+        if (savedLogin) document.getElementById('loginField').value = savedLogin;
+        if (savedPass) document.getElementById('passwordField').value = savedPass;
+    }
+
+    // ------ Управление страницами ------
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+
+    function showPage1() {
+        page1.classList.remove('hidden-page');
+        page2.classList.add('hidden-page');
+        const errorDiv = document.getElementById('loginError');
+        if (errorDiv) errorDiv.innerText = '';
+    }
+
+    function showPage2() {
+        page1.classList.add('hidden-page');
+        page2.classList.remove('hidden-page');
+        const errorDiv = document.getElementById('loginError');
+        if (errorDiv) errorDiv.innerText = '';
+    }
+
+    // ------ Работа с пользователями (localStorage) ------
+    let users = JSON.parse(localStorage.getItem('altaiUsers')) || [];
+    if (users.length === 0) {
+        users.push({ login: 'altai', password: 'altai2025' });
+        users.push({ login: 'user', password: '123' });
+        localStorage.setItem('altaiUsers', JSON.stringify(users));
+    }
+
+    function saveUsersToStorage() {
+        localStorage.setItem('altaiUsers', JSON.stringify(users));
+    }
+
+    function registerNewUser(login, password) {
+        const trimmedLogin = login.trim();
+        const trimmedPass = password.trim();
+        if (!trimmedLogin || !trimmedPass) {
+            return { success: false, message: 'Логин и пароль не могут быть пустыми' };
+        }
+        const exists = users.some(u => u.login === trimmedLogin);
+        if (exists) {
+            return { success: false, message: 'Пользователь с таким логином уже существует' };
+        }
+        users.push({ login: trimmedLogin, password: trimmedPass });
+        saveUsersToStorage();
+        return { success: true, message: 'Регистрация успешна! Теперь войдите.' };
+    }
+
+    function checkLogin(login, password) {
+        return users.some(u => u.login === login && u.password === password);
+    }
+
+    // ------ Модальное окно регистрации ------
+    const modal = document.getElementById('regModal');
+    const regBtn = document.getElementById('registrationBtn');
+    const regLoginInput = document.getElementById('regLoginInput');
+    const regPasswordInput = document.getElementById('regPasswordInput');
+    const confirmRegBtn = document.getElementById('confirmRegBtn');
+    const cancelRegBtn = document.getElementById('cancelRegBtn');
+    const modalMsgSpan = document.getElementById('modalMsg');
+
+    regBtn.addEventListener('click', () => {
+        regLoginInput.value = '';
+        regPasswordInput.value = '';
+        modalMsgSpan.innerText = '';
+        modal.style.display = 'flex';
+    });
+
+    function closeModal() {
+        modal.style.display = 'none';
+        modalMsgSpan.innerText = '';
+    }
+
+    cancelRegBtn.addEventListener('click', closeModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    confirmRegBtn.addEventListener('click', () => {
+        const loginVal = regLoginInput.value;
+        const passVal = regPasswordInput.value;
+        const result = registerNewUser(loginVal, passVal);
+        modalMsgSpan.innerText = result.message;
+        if (result.success) {
+            setTimeout(() => {
+                closeModal();
+                const errorDiv = document.getElementById('loginError');
+                if (errorDiv) errorDiv.innerText = '✅ Регистрация успешна! Войдите.';
+                if (loginVal && passVal) {
+                    document.getElementById('loginField').value = loginVal;
+                    document.getElementById('passwordField').value = passVal;
+                    saveCredentials(loginVal, passVal);
+                }
+            }, 1300);
+        }
+    });
+
+    // ------ Вход на Листе №1 с запоминанием ------
+    const loginField = document.getElementById('loginField');
+    const passwordField = document.getElementById('passwordField');
+    const doLoginBtn = document.getElementById('doLoginBtn');
+    const loginErrorSpan = document.getElementById('loginError');
+
+    loadSavedCredentials();
+
+    doLoginBtn.addEventListener('click', () => {
+        const loginVal = loginField.value.trim();
+        const passVal = passwordField.value;
+        if (!loginVal || !passVal) {
+            loginErrorSpan.innerText = '❌ Заполните оба поля';
+            return;
+        }
+        if (checkLogin(loginVal, passVal)) {
+            loginErrorSpan.innerText = '';
+            saveCredentials(loginVal, passVal);
+            showPage2();
+        } else {
+            loginErrorSpan.innerText = 'Неверный логин или пароль';
+        }
+    });
+
+    [loginField, passwordField].forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                doLoginBtn.click();
+            }
+        });
+    });
+
+    // ------ Кнопка "Назад" на Листе2 -> Лист1 ------
+    const backBtn = document.getElementById('backToFirstPage');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            showPage1();
+        });
+    }
+
+    // ------ Кнопка пешего похода (ссылка) ------
+    const hikingBtn = document.getElementById('hikingBtn');
+    if (hikingBtn) {
+        hikingBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.open('https://rg.ru/2025/08/25/luchshie-marshruty-po-gornomu-altaiu-na-avtomobile-peshkom-i-konnye-pohody.html?ysclid=mohgf046bw735326745&utm_referrer=https%3A%2F%2Fya.ru%2F', '_blank');
+        });
+    }
+
+    // ------ Кнопка сплава по воде (ссылка) ------
+    const raftingBtn = document.getElementById('raftingBtn');
+    if (raftingBtn) {
+        raftingBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.open('https://altai-tour.ru/tours/filter/tour_type-is-water/apply/?etext=2202.hOSEY8i8jn4n9j0cERl849H3H2iX1ERBJ3gFZAW9nlxOPeD_SzT4dDPOkcCik8kxZnl1eWpkanV0YXNuamV4eg.8fe6de23a846ecfae2f2134de9642e36961d4d7e&yclid=8520827618768715775', '_blank');
+        });
+    }
+
+    // ------ Кнопка "На машине" (ссылка) ------
+    const carBtn = document.getElementById('carBtn');
+    if (carBtn) {
+        carBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.open('https://sutochno.ru/sj/altay-na-mashine', '_blank');
+        });
+    }
+
+    // Все требования выполнены:
+    // - Лист1 фон, шрифт Algerian (100px/70px)
+    // - Надпись "Студия Михайло Кук & К°" 8см от левого края, 1см от низа, Times New Roman 16px
+    // - Кнопка "Регистрация" 15мм от левого/верхнего края, открывает модалку
+    // - Блок "Войти" размер 5x5 см, отступ справа 1.5см, сверху 15мм, содержит поля и кнопку
+    // - ЗАПОМИНАНИЕ логина и пароля (localStorage). При успешном входе данные сохраняются и подставляются при перезагрузке.
+    // - При успешном входе -> Лист2
+    // - Лист2: фон по новой ссылке (карта), три кнопки 5x6 см с заданными картинками, подписями и ссылками
+    console.log('Готово: блок входа 5x5 см, запоминание логина/пароля, три кнопки 5x6 см, фон карты на Листе2.');
+</script>
+</body>
+</html>

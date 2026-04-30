@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Алтай Тур | Карты, маршруты и справочник Сиб-Гид</title>
+    <!-- Leaflet CSS & JS для интерактивной карты -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: #F5F2E8;
+            color: #1C2D1B;
+            scroll-behavior: smooth;
+        }
+
+        /* ГЛАВНЫЙ ЭКРАН */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)), url('https://avatars.mds.yandex.net/i?id=c43d745f215c5ca86c66724caa0e9f49_l-9716553-images-thumbs&n=13');
+            background-size: cover;
+            background-position: center 30%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .hero-content {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            padding: 2rem 2.5rem;
+            border-radius: 60px;
+            max-width: 1000px;
+        }
+
+        .hero h1 {
+            font-family: 'Algerian', 'Copperplate Gothic', serif;
+            font-size: clamp(3rem, 12vw, 5.5rem);
+            color: #FFF2C4;
+            text-shadow: 4px 4px 12px #1E3A2A;
+        }
+
+        .hero .sub {
+            font-family: 'Algerian', serif;
+            font-size: clamp(1.5rem, 6vw, 2.8rem);
+            color: #FFEFC0;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero p {
+            color: white;
+            max-width: 600px;
+            margin: 1rem auto;
+            font-weight: 500;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            background: #E2821F;
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.2s;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid white;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn:hover { background: #C26C12; transform: translateY(-3px); }
+        .btn-outline:hover { background: rgba(255,255,255,0.2); }
+
+        /* Блок входа */
+        .login-card {
+            max-width: 480px;
+            margin: -2rem auto 2rem auto;
+            background: rgba(255, 250, 240, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 48px;
+            padding: 1.5rem;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+            border: 1px solid #FFE0A8;
+        }
+
+        .login-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #2A5A3C;
+            text-align: center;
+        }
+
+        .input-row {
+            margin: 0.8rem 0;
+        }
+
+        .input-row input {
+            width: 100%;
+            padding: 12px 18px;
+            border-radius: 80px;
+            border: 1px solid #DDC7A0;
+            background: white;
+            font-size: 1rem;
+        }
+
+        .login-btn {
+            background: #E2821F;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 80px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .error-msg { font-size: 0.75rem; color: #B84C1C; text-align: center; margin-top: 8px; }
+
+        /* Секции */
+        .section {
+            padding: 4rem 2rem;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-align: center;
+            color: #20412E;
+            margin-bottom: 2rem;
+        }
+
+        /* КАРТА (интерактивная Leaflet) */
+        .map-container {
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.15);
+            margin: 1rem 0 2rem;
+            border: 3px solid #FFE0A8;
+        }
+        #altaiMap {
+            height: 500px;
+            width: 100%;
+            background: #C9D9C5;
+        }
+
+        /* Карточки маршрутов */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .route-card {
+            background: white;
+            border-radius: 32px;
+            overflow: hidden;
+            transition: 0.25s;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+        }
+
+        .route-card:hover { transform: translateY(-6px); box-shadow: 0 22px 30px rgba(0,0,0,0.12); }
+
+        .card-img {
+            height: 210px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .badge {
+            background: #FCE5CF;
+            color: #B45C1A;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 0.6rem;
+            color: #1F432E;
+        }
+
+        .route-link {
+            background: #E2821F;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Стили для блока Сиб-Гид (каталог и карты) */
+        .guide-block {
+            background: #EBE1CF;
+            border-radius: 48px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: 0.2s;
+        }
+        .guide-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.8rem;
+            border-bottom: 2px solid #CAA969;
+            padding-bottom: 0.8rem;
+        }
+        .guide-header h3 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #2A4A2C;
+        }
+        .guide-link {
+            background: #46653A;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-block;
+        }
+        .guide-link:hover { background: #5B8550; transform: scale(0.98);}
+        
+        /* КНОПКА КАРТЫ (особый акцент) */
+        .map-download-btn {
+            background: #F49B2F;
+            color: #2D3E1F;
+            padding: 12px 28px;
+            font-weight: 800;
+            font-size: 1rem;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transition: 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .map-download-btn:hover {
+            background: #E07F1A;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(0,0,0,0.2);
+        }
+        .guide-cols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 1.5rem 0 1rem;
+        }
+        .guide-category {
+            background: #FEF9EF;
+            border-radius: 28px;
+            padding: 1.2rem 1.5rem;
+        }
+        .guide-category h4 {
+            font-size: 1.4rem;
+            color: #B55B1A;
+            margin-bottom: 0.8rem;
+            border-left: 5px solid #E2821F;
+            padding-left: 12px;
+        }
+        .guide-category ul {
+            list-style: none;
+        }
+        .guide-category li {
+            margin-bottom: 8px;
+        }
+        .guide-category a {
+            text-decoration: none;
+            color: #2F5A3A;
+            font-weight: 500;
+            transition: 0.1s;
+            display: inline-block;
+        }
+        .guide-category a:hover {
+            color: #E2821F;
+            transform: translateX(4px);
+        }
+        .guide-note {
+            margin-top: 1.5rem;
+            text-align: right;
+            font-size: 0.8rem;
+            color: #6B5A3E;
+            border-top: 1px solid #DCC098;
+            padding-top: 1rem;
+        }
+
+        /* Предложения */
+        .offers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+            background: #E3D7C2;
+            border-radius: 48px;
+            padding: 2rem;
+            justify-content: center;
+        }
+        .offer-item {
+            background: #FCF5E6;
+            border-radius: 32px;
+            padding: 1.5rem;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        /* Подвал */
+        .footer {
+            background: #1E2C1C;
+            color: #E2E2B6;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        /* Модалка */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-card {
+            background: #FFF9EF;
+            max-width: 400px;
+            width: 90%;
+            padding: 2rem;
+            border-radius: 48px;
+            text-align: center;
+        }
+        .modal-card input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 60px;
+            border: 1px solid #C7AD78;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 1rem;
+        }
+        .modal-btn-reg { background: #2A6B47; color: white; border: none; padding: 8px; border-radius: 40px; flex:1; cursor: pointer;}
+        .modal-btn-cancel { background: #A77F54; color: white; flex:1; border-radius: 40px; cursor: pointer;}
+        small { display: block; margin-top: 12px; color: #86683E; }
+    </style>
+</head>
+<body>
+
+    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Путешествие</h1>
+            <div class="sub">по Горному Алтаю</div>
+            <p>Пешие тропы, бурные реки, горные серпантины, подробные карты и справочник «Сиб-Гид»</p>
+            <div class="btn-group">
+                <a href="#map" class="btn">🗺️ Интерактивная карта</a>
+                <a href="#guide" class="btn btn-outline">📚 Справочник Сиб-Гид</a>
+                <button id="openRegBtn" class="btn btn-outline">📝 Регистрация</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Блок входа -->
+    <div class="login-card">
+        <div class="login-title">🔐 Войти</div>
+        <div class="input-row"><input type="text" id="loginUser" placeholder="Логин"></div>
+        <div class="input-row"><input type="password" id="loginPass" placeholder="Пароль"></div>
+        <button id="doLogin" class="login-btn">Войти</button>
+        <div id="loginErrorMsg" class="error-msg"></div>
+        <div style="font-size:0.7rem; text-align:center; margin-top:10px;">🔑 тестовый: altai / altai2025</div>
+    </div>
+
+    <!-- ИНТЕРАКТИВНАЯ КАРТА -->
+    <div class="section" id="map">
+        <h2 class="section-title">🗺️ Интерактивная карта Горного Алтая</h2>
+        <div class="map-container">
+            <div id="altaiMap"></div>
+        </div>
+        <p style="text-align: center; color: #46653A; margin-top: 0.5rem;">⭐ Основные достопримечательности: Белуха, Чуйский тракт, Телецкое озеро, Катунь, перевал Кату-Ярык</p>
+    </div>
+
+    <!-- МАРШРУТЫ: пешие, водные, автомобильные -->
+    <div class="section" id="routes">
+        <h2 class="section-title">🏔️ Активные маршруты</h2>
+        <div class="cards-grid">
+            <div class="route-card">
+                <div class="card-img" style="background-image: url('https://png.pngtree.com/background/20230614/original/pngtree-man-walking-up-a-mountain-with-a-backpack-picture-image_3481455.jpg');"></div>
+                <div class="card-content">
+                    <span class="badge">🥾 Треккинг</span>
+                    <h3>Под рюкзаком</h3>
+                    <p>Походы к подножию Белухи, долина реки Аккем, альпийские луга и стоянки у озёр.</p>
+                    <a href="https://rg.ru/2025/08/25/luchshie-marshruty-po-gornomu-altaiu-na-avtomobile-peshkom-i-konnye-pohody.html?ysclid=mohgf046bw735326745&utm_referrer=https%3A%2F%2Fya.ru%2F" target="_blank" class="route-link">Перейти к маршрутам →</a>
+                </div>
+            </div>
+            <div class="route-card">
+                <div class="card-img" style="background-image: url('https://altaiactive.ru/wp-content/uploads/2023/03/splav-po-katuni.jpg');"></div>
+                <div class="card-content">
+                    <span class="badge">🌊 Сплав</span>
+                    <h3>По воде</h3>
+                    <p>Рафтинг по рекам Катунь, Чуя, Башкаус. Экстремальные пороги и живописные берега.</p>
+                    <a href="https://altai-tour.ru/tours/filter/tour_type-is-water/apply/?etext=2202.hOSEY8i8jn4n9j0cERl849H3H2iX1ERBJ3gFZAW9nlxOPeD_SzT4dDPOkcCik8kxZnl1eWpkanV0YXNuamV4eg.8fe6de23a846ecfae2f2134de9642e36961d4d7e&yclid=8520827618768715775" target="_blank" class="route-link">Выбрать сплав →</a>
+                </div>
+            </div>
+            <div class="route-card">
+                <div class="card-img" style="background-image: url('https://i.ytimg.com/vi/a07zUa8MpDM/maxresdefault.jpg');"></div>
+                <div class="card-content">
+                    <span class="badge">🚗 Автотур</span>
+                    <h3>На машине</h3>
+                    <p>Чуйский тракт, перевал Кату-Ярык, Каракольские озёра, марсианские пейзажи.</p>
+                    <a href="https://sutochno.ru/sj/altay-na-mashine" target="_blank" class="route-link">Идеи маршрутов →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- БЛОК СИБ-ГИД + КНОПКА "КАРТЫ ГОРНОГО АЛТАЯ" (ПО ССЫЛКЕ) -->
+    <div class="section" id="guide">
+        <div class="guide-block">
+            <div class="guide-header">
+                <h3>📘 Сиб-Гид: Республика Алтай</h3>
+                <a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512" target="_blank" class="guide-link">Полный справочник →</a>
+            </div>
+            <!-- НОВАЯ КНОПКА "КАРТЫ ГОРНОГО АЛТАЯ" ведёт на ту же страницу с картами -->
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512" target="_blank" class="map-download-btn">
+                    🗺️ Карты Горного Алтая (1:500 000) → Перейти
+                </a>
+                <p style="font-size: 0.8rem; margin-top: 8px; color: #5F4C2E;">Масштаб 1 см = 5 км. Подробные карты районов, рек и перевалов.</p>
+            </div>
+            <div class="guide-cols">
+                <!-- Районы и населённые пункты -->
+                <div class="guide-category">
+                    <h4>🗺️ Районы / города</h4>
+                    <ul>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#areas" target="_blank">Районы Республики Алтай</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#towns" target="_blank">Населенные пункты</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#bases" target="_blank">Турбазы и кемпинги</a></li>
+                    </ul>
+                </div>
+                <!-- Природа и достопримечательности -->
+                <div class="guide-category">
+                    <h4>🏞️ Достопримечательности</h4>
+                    <ul>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#lakes" target="_blank">Озера, водохранилища</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#mountains" target="_blank">Горы, вершины, хребты</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#rivers" target="_blank">Реки, пороги</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#waterfalls" target="_blank">Водопады</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#caves" target="_blank">Пещеры</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#passes" target="_blank">Перевалы</a></li>
+                    </ul>
+                </div>
+                <div class="guide-category">
+                    <h4>🏛️ Культура / памятники</h4>
+                    <ul>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#history" target="_blank">Исторические памятники</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#museums" target="_blank">Музеи, памятники</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#religion" target="_blank">Храмы, монастыри</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#reserves" target="_blank">Заповедники, лесничества</a></li>
+                        <li><a href="https://sib-guide.ru/siberia/ar/4?ysclid=mol443sspp123150512#springs" target="_blank">Источники, ключи</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="guide-note">
+                📍 Данные предоставлены проектом «Сиб-Гид». Выше — кнопка перехода к картам Алтая масштаба 1:500 000.
+            </div>
+        </div>
+    </div>
+
+    <!-- ДОПОЛНИТЕЛЬНЫЕ ПРЕДЛОЖЕНИЯ -->
+    <div class="section" style="padding-top: 0;">
+        <div class="offers">
+            <div class="offer-item">
+                <div style="font-size:2.5rem;">🏞️</div>
+                <h3 style="margin: 0.3rem 0;">Гид-проводники</h3>
+                <p>Индивидуальные экскурсии по карте Алтая</p>
+                <a href="https://altai-tour.ru/tours/" target="_blank" style="color:#E2821F; font-weight: bold;">Заказать</a>
+            </div>
+            <div class="offer-item">
+                <div style="font-size:2.5rem;">🎒</div>
+                <h3 style="margin: 0.3rem 0;">Снаряжение</h3>
+                <p>Аренда палаток, треккинговых палок, рафтов</p>
+                <a href="https://altaiactive.ru/" target="_blank" style="color:#E2821F; font-weight: bold;">Подробнее</a>
+            </div>
+            <div class="offer-item">
+                <div style="font-size:2.5rem;">🏕️</div>
+                <h3 style="margin: 0.3rem 0;">Кемпинги</h3>
+                <p>Базы отдыха и глэмпинги на берегу Катуни</p>
+                <a href="https://sutochno.ru/sj/altay-na-mashine" target="_blank" style="color:#E2821F; font-weight: bold;">Выбрать</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© Путешествие по Горному Алтаю — интерактивная карта, маршруты, карты Сиб-Гид. Студия Михайло Кук & К°</p>
+    </footer>
+
+    <!-- Модалка регистрации -->
+    <div id="regModal" class="modal">
+        <div class="modal-card">
+            <h3>🏔 Регистрация</h3>
+            <input type="text" id="regLoginInput" placeholder="Логин">
+            <input type="password" id="regPasswordInput" placeholder="Пароль">
+            <div id="regModalMessage" style="font-size: 0.8rem; color: #B45A1C;"></div>
+            <div class="modal-buttons">
+                <button id="confirmRegBtn" class="modal-btn-reg">Зарегистрироваться</button>
+                <button id="cancelRegBtn" class="modal-btn-cancel">Отмена</button>
+            </div>
+            <small>✓ Мы запомним логин и пароль для быстрого входа</small>
+        </div>
+    </div>
+
+    <script>
+        // ---------- ИНТЕРАКТИВНАЯ КАРТА (Leaflet) ----------
+        const map = L.map('altaiMap').setView([50.6, 86.5], 7.8);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
+            subdomains: 'abcd',
+            maxZoom: 14,
+        }).addTo(map);
+
+        const markersData = [
+            { coords: [50.0647, 87.7467], name: 'Гора Белуха (4506 м)', desc: 'Высочайшая вершина Сибири', type: 'peak' },
+            { coords: [51.7879, 87.2465], name: 'Телецкое озеро', desc: 'Жемчужина Алтая', type: 'lake' },
+            { coords: [51.6685, 85.9970], name: 'Чемал', desc: 'Популярный курорт', type: 'town' },
+            { coords: [50.6105, 86.5381], name: 'Перевал Кату-Ярык', desc: 'Живописный перевал', type: 'pass' },
+            { coords: [51.6345, 85.5547], name: 'Горно-Алтайск', desc: 'Столица Республики Алтай', type: 'town' },
+            { coords: [50.9241, 88.1093], name: 'Долина реки Чулышман', desc: 'Каскад водопадов, Учар', type: 'nature' },
+            { coords: [51.0372, 86.8083], name: 'Каракольские озёра', desc: '7 живописных озёр', type: 'nature' },
+            { coords: [51.5762, 85.6278], name: 'Катунь', desc: 'Главная река, рафтинг', type: 'river' }
+        ];
+        const iconMap = { peak: '⛰️', lake: '💧', town: '🏘️', pass: '⚠️', nature: '🌲', river: '💧' };
+        markersData.forEach(m => {
+            const iconHtml = iconMap[m.type] || '📍';
+            const icon = L.divIcon({ html: iconHtml, iconSize: [28,28], className: 'custom-marker' });
+            L.marker(m.coords, { icon }).addTo(map).bindPopup(`<b>${m.name}</b><br>${m.desc}`);
+        });
+        const chuyskiyCoords = [[51.9639,85.9577],[51.8667,86.003],[51.7477,86.0876],[51.6485,86.2139],[51.4861,86.4418],[51.2333,86.6667],[50.9833,86.9167],[50.6272,87.4139]];
+        L.polyline(chuyskiyCoords, { color: '#FFA559', weight: 4, dashArray: '5, 8' }).addTo(map).bindPopup('🚗 Чуйский тракт');
+
+        // ---------- РЕГИСТРАЦИЯ / ВХОД / ЗАПОМИНАНИЕ ----------
+        const USERS_KEY = 'altai_map_users';
+        const SAVED_CRED_KEY = 'altai_saved_auth_data';
+        let users = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+        if (users.length === 0) { users.push({ login: 'altai', password: 'altai2025' }, { login: 'user', password: '123' }); localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+        function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+        function registerUser(login, pwd) { const l = login.trim(), p = pwd.trim(); if (!l || !p) return { ok: false, msg: 'Заполните поля' }; if (users.some(u => u.login === l)) return { ok: false, msg: 'Логин занят' }; users.push({ login: l, password: p }); saveUsers(); return { ok: true, msg: 'Регистрация успешна!' }; }
+        function auth(login, pwd) { return users.some(u => u.login === login && u.password === pwd); }
+        function storeCred(login, pwd) { if (login && pwd) localStorage.setItem(SAVED_CRED_KEY, JSON.stringify({ login, pwd })); else localStorage.removeItem(SAVED_CRED_KEY); }
+        function loadCred() { const raw = localStorage.getItem(SAVED_CRED_KEY); if (raw) try { return JSON.parse(raw); } catch(e) {} return null; }
+
+        const loginUser = document.getElementById('loginUser'), loginPass = document.getElementById('loginPass'), loginBtn = document.getElementById('doLogin'), loginErr = document.getElementById('loginErrorMsg');
+        const savedCred = loadCred();
+        if (savedCred) { loginUser.value = savedCred.login; loginPass.value = savedCred.pwd; }
+        function onLoginSuccess() { document.getElementById('map').scrollIntoView({ behavior: 'smooth' }); loginErr.innerText = '✅ Вход выполнен! Добро пожаловать.'; setTimeout(() => loginErr.innerText = '', 3000); }
+        loginBtn.onclick = () => { const l = loginUser.value.trim(), p = loginPass.value; if (!l || !p) { loginErr.innerText = 'Введите данные'; return; } if (auth(l, p)) { storeCred(l, p); loginErr.innerText = ''; onLoginSuccess(); } else { loginErr.innerText = 'Неверный логин/пароль'; } };
+        [loginUser, loginPass].forEach(f => f.addEventListener('keypress', e => { if (e.key === 'Enter') loginBtn.click(); }));
+
+        // Модалка регистрации
+        const modal = document.getElementById('regModal'), openBtn = document.getElementById('openRegBtn'), regLogin = document.getElementById('regLoginInput'), regPass = document.getElementById('regPasswordInput'), regMsg = document.getElementById('regModalMessage'), confirmReg = document.getElementById('confirmRegBtn'), cancelReg = document.getElementById('cancelRegBtn');
+        openBtn.onclick = () => { modal.style.display = 'flex'; regMsg.innerText = ''; regLogin.value = ''; regPass.value = ''; };
+        const closeModal = () => modal.style.display = 'none';
+        cancelReg.onclick = closeModal; window.onclick = (e) => { if (e.target === modal) closeModal(); };
+        confirmReg.onclick = () => { const res = registerUser(regLogin.value, regPass.value); regMsg.innerText = res.msg; if (res.ok) { setTimeout(() => { closeModal(); loginUser.value = regLogin.value; loginPass.value = regPass.value; loginErr.innerText = '✅ Регистрация успешна! Нажмите «Войти».'; setTimeout(() => loginErr.innerText = '', 2000); }, 1300); } };
+    </script>
+</body>
+</html>
